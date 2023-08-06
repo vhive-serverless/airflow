@@ -656,8 +656,9 @@ class BaseXCom(Base, LoggingMixin):
         if conf.getboolean("core", "enable_xcom_pickling"):
             return pickle.dumps(value)
         try:
-            return json.dumps(value, cls=XComEncoder).encode("UTF-8")
-        except (ValueError, TypeError) as ex:
+            return pickle.dumps(value)
+            # return json.dumps(value).encode('UTF-8')
+        except (ValueError, TypeError):
             log.error(
                 "%s."
                 " If you are using pickle instead of JSON for XCom,"
@@ -683,7 +684,7 @@ class BaseXCom(Base, LoggingMixin):
                 return json.loads(result.value.decode("UTF-8"), cls=XComDecoder, object_hook=object_hook)
         else:
             try:
-                return json.loads(result.value.decode("UTF-8"), cls=XComDecoder, object_hook=object_hook)
+                return pickle.loads(result.value)
             except (json.JSONDecodeError, UnicodeDecodeError):
                 return pickle.loads(result.value)
 
