@@ -1328,6 +1328,7 @@ class TaskInstance(Base, LoggingMixin):
             # start date that is recorded in task_reschedule table
             # If the task continues after being deferred (next_method is set), use the original start_date
             self.start_date = self.start_date if self.next_method else timezone.utcnow()
+            self.log.info(f"start_date: {self.start_date}")
             if self.state == TaskInstanceState.UP_FOR_RESCHEDULE:
                 task_reschedule: TR = TR.query_for_task_instance(self, session=session).first()
                 if task_reschedule:
@@ -1651,10 +1652,10 @@ class TaskInstance(Base, LoggingMixin):
             with set_current_context(context):
                 task_orig = self.render_templates(context=context)
 
-            if not test_mode:
-                rtif = RenderedTaskInstanceFields(ti=self, render_templates=False)
-                RenderedTaskInstanceFields.write(rtif)
-                RenderedTaskInstanceFields.delete_old_records(self.task_id, self.dag_id)
+            # if not test_mode:
+            #     rtif = RenderedTaskInstanceFields(ti=self, render_templates=False)
+            #     RenderedTaskInstanceFields.write(rtif)
+            #     RenderedTaskInstanceFields.delete_old_records(self.task_id, self.dag_id)
 
             # Export context to make it available for operators to use.
             airflow_context_vars = context_to_airflow_vars(context, in_env_var_format=True)
