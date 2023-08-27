@@ -6,7 +6,8 @@ import pathlib
 import grpc
 import pickle
 import logging
-import subprocess
+import argparse
+import pendulum
 # from  argparse import ArgumentParser
 from airflow.utils.cli import get_dag
 from airflow.utils.dates import timezone
@@ -24,7 +25,7 @@ class InvokeWorker(remote_xcom_pb2_grpc.TaskRunServicer):
         self.parser = cli_parser.get_parser()
         dag_id = os.getenv("AIRFLOW_DAG_ID")
         task_id = os.getenv("AIRFLOW_TASK_ID")
-        self.dag = get_dag(f"DAGS_FOLDER/{dag_id}.py", dag_id, include_examples=False)
+        self.dag = get_dag(f"DAGS_FOLDER/{dag_id}.py", dag_id)
         self.task = self.dag.get_task(task_id=task_id)
         self.ti, _ = task_command._get_ti_without_db(self.task, -1, create_if_necessary="memory")
         self.ti.init_run_context(raw=False)
@@ -51,8 +52,9 @@ class InvokeWorker(remote_xcom_pb2_grpc.TaskRunServicer):
         
         args = self.parser.parse_args(args[1:])
         self.ti.dag_run.run_id = args.execution_date_or_run_id
-        self.ti.dag_run.execution_date = timezone.parse(args.execution_date_or_run_id[8:])
+        self.ti.dag_run.execution_date = pendulum.instance(timezone.utcnow())
         self.ti.run_id = args.execution_date_or_run_id
+        self.ti.map_index = args.map_index
         log.info(f"parsed_args: {args}, dag: {self.dag}, task: {self.task}")
         task_command.task_run(args, dag = self.dag, task=self.task, ti = self.ti)       
         
@@ -67,14 +69,17 @@ class InvokeWorker(remote_xcom_pb2_grpc.TaskRunServicer):
         return remote_xcom_pb2.task_reply(xcoms = response)
 
 
-def serve():
+def serve(port: int):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     remote_xcom_pb2_grpc.add_TaskRunServicer_to_server(InvokeWorker(),server)
-    server.add_insecure_port(f'[::]:{8081}')
-    log.info(f"start worker server at port [{8081}]")
+    server.add_insecure_port(f'[::]:{port}')
+    log.info(f"start worker server at port [{port}]")
     server.start()
     server.wait_for_termination()
 
 
 if __name__ == '__main__':
-    serve()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--port', type=int, default=8081)
+    args = parser.parse_args()
+    serve(args.port)

@@ -1,3 +1,4 @@
+helm uninstall -n airflow airflow
 kn service delete --all -n airflow
 kubectl delete namespace airflow
 kubectl delete -f configs/volumes.yaml
@@ -10,6 +11,8 @@ docker tag airflow-worker:latest nehalem90/airflow-worker:latest
 docker push nehalem90/airflow-worker:latest
 docker tag airflow:latest nehalem90/airflow:latest
 docker push nehalem90/airflow:latest
+docker tag airflow-workflow-gateway:latest nehalem90/airflow-workflow-gateway:latest
+docker push nehalem90/airflow-workflow-gateway:latest
 ./scripts/setup_airflow.sh
 
 # Get Logs
