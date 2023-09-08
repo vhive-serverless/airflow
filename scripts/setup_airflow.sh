@@ -26,12 +26,8 @@ scheduler="$(kubectl -n airflow get pods | grep scheduler | awk '{print $1}')"
 kubectl -n airflow exec $scheduler -- mkdir /home/airflow/.kube
 kubectl -n airflow cp ~/.kube/config "$scheduler":/home/airflow/.kube/config
 
-# deploy workflow gateway
-# this is the service that lets users run workflows and returns the results
-kn service apply -f workflow-gateway/workflow-gateway.yaml -n airflow
-
 # deploy an example workflow
-./scripts/deploy_workflow.sh benchmark_w1_d2
+./scripts/deploy_workflow.sh xcom_dag
 
 # wait for webserver
 while [[ ! $(kubectl -n airflow get pods | grep webserver.*1/1.*Running) ]]; do sleep 1; done

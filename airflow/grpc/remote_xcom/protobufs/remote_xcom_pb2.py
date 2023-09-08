@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11remote_xcom.proto\x12\x0bRemote_xcom\"?\n\x0btask_invoke\x12\x0c\n\x04\x61rgs\x18\x01 \x03(\t\x12\x13\n\x0b\x61nnotations\x18\x02 \x01(\x0c\x12\r\n\x05xcoms\x18\x03 \x01(\x0c\"\x1b\n\ntask_reply\x12\r\n\x05xcoms\x18\x01 \x01(\x0c\x32L\n\x07TaskRun\x12\x41\n\nHandleTask\x12\x18.Remote_xcom.task_invoke\x1a\x17.Remote_xcom.task_reply\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11remote_xcom.proto\x12\x0bRemote_xcom\"\x1b\n\x0btask_invoke\x12\x0c\n\x04\x61rgs\x18\x01 \x03(\t\"\x1c\n\ntask_reply\x12\x0e\n\x06timing\x18\x01 \x01(\x0c\x32L\n\x07TaskRun\x12\x41\n\nHandleTask\x12\x18.Remote_xcom.task_invoke\x1a\x17.Remote_xcom.task_reply\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -22,9 +22,9 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   _globals['_TASK_INVOKE']._serialized_start=34
-  _globals['_TASK_INVOKE']._serialized_end=97
-  _globals['_TASK_REPLY']._serialized_start=99
-  _globals['_TASK_REPLY']._serialized_end=126
-  _globals['_TASKRUN']._serialized_start=128
-  _globals['_TASKRUN']._serialized_end=204
+  _globals['_TASK_INVOKE']._serialized_end=61
+  _globals['_TASK_REPLY']._serialized_start=63
+  _globals['_TASK_REPLY']._serialized_end=91
+  _globals['_TASKRUN']._serialized_start=93
+  _globals['_TASKRUN']._serialized_end=169
 # @@protoc_insertion_point(module_scope)

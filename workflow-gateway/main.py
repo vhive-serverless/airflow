@@ -1,4 +1,5 @@
 import uuid
+from time import sleep, perf_counter
 
 import airflow_client.client
 from airflow_client.client.api import config_api, dag_api, dag_run_api
@@ -9,6 +10,7 @@ from airflow_client.client.model.x_com_collection import XComCollection
 from airflow_client.client.model.error import Error
 
 import json
+from contextlib import suppress
 # The client must use the authentication and authorization parameters
 # in accordance with the API server security policy.
 # Examples for each auth method are provided below, use the example that
@@ -61,26 +63,44 @@ def trigger_dag(api_client, DAG_ID):
     except airflow_client.client.exceptions.OpenApiException as e:
         print("[red]Exception when calling DAGRunAPI->post_dag_run: %s\n" % e)
         errors = True
-    else:
-        print('[green]Posting DAG Run successful')
-        
 
 def get_xcom_values(api_client, dag_id, run_id, task_id):
+    prod_id, cons_id = task_id
     api_instance = x_com_api.XComApi(api_client)
-    api_response = api_instance.get_xcom_entries(dag_id, run_id, task_id)
-    print(f"result: {api_response}")
+    while True:
+        try: 
+            xcom_return_value_producer = api_instance.get_xcom_entry(dag_id, run_id, prod_id, 'return_value')
+            xcom_return_value_consumer = api_instance.get_xcom_entry(dag_id, run_id, cons_id, 'return_value')
+        except Exception as e:
+            print(f"no result: {e.status}", end="\r")
+            sleep(0.1)
+        else: 
+            got_result_time = perf_counter()
+            print(f"producer: {xcom_return_value_producer}")
+            print(f"consumer: {xcom_return_value_consumer}")
+            
+            return got_result_time
 
 def main():
     configuration = airflow_client.client.Configuration(
     host="http://localhost:8080/api/v1",
     username='admin',
-    password='admin'
+    password='admin', 
     )
-    DAG_ID = "benchmark_w1_d2"
+    dag_id = "xcom_dag"
     api_client = airflow_client.client.ApiClient(configuration)
-    trigger_dag(api_client, DAG_ID)
+    start_trigger = perf_counter()
+    response = trigger_dag(api_client, dag_id)
+    finish_trigger = perf_counter()
     
-
+    run_id = response['dag_run_id']
+    prod_id = 'get_date'
+    cons_id = 'save_date'
+    
+    got_result_time = get_xcom_values(api_client, dag_id, run_id, [prod_id, cons_id])
+    
+    print(f"trigger_time: {finish_trigger - start_trigger}")
+    print(f"exec_and_retrieve: {got_result_time - finish_trigger}")
 
     
 if __name__ == "__main__":

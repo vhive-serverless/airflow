@@ -361,7 +361,7 @@ extraConfigMaps: {}
 # TODO: difference from `env`? This is a templated string. Probably should template `env` and remove this.
 extraEnv: |
   - name: AIRFLOW__API__AUTH_BACKENDS
-    value: 'airflow.api.auth.backend.basic_auth'
+    value: 'airflow.api.auth.backend.session,airflow.api.auth.backend.basic_auth'
 # eg:
 # extraEnv: |
 #   - name: AIRFLOW__CORE__LOAD_EXAMPLES

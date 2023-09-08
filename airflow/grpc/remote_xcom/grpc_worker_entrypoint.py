@@ -8,6 +8,7 @@ import pickle
 import logging
 import argparse
 import pendulum
+from time import perf_counter
 # from  argparse import ArgumentParser
 from airflow.utils.cli import get_dag
 from airflow.utils.dates import timezone
@@ -34,22 +35,9 @@ class InvokeWorker(remote_xcom_pb2_grpc.TaskRunServicer):
     def HandleTask(self, request, context):
         log.info(f"Received job !")
         args = request.args
-        annotations =  pickle.loads(request.annotations)
         # Command below can be safely removed; deserialized for logging purpose
-        xcoms = pickle.loads(request.xcoms)
-        log.info(f"args: {args}, annotations: {annotations}, xcoms: {xcoms}")
-        
-        base_path = pathlib.Path('/home/airflow') / annotations["dag_id"] / annotations["task_id"] / annotations["run_id"] / str(annotations["map_index"])
-        os.makedirs(base_path, exist_ok=True)
-        input_path = base_path / "input"
-        with open(input_path, "wb") as f:
-            f.write(request.xcoms)
-        airflow_output_path = f"{base_path}/output"
-        try:
-            os.remove(airflow_output_path)
-        except FileNotFoundError:
-            pass
-        
+        log.info(f"args: {args}")
+        start_time = perf_counter()
         args = self.parser.parse_args(args[1:])
         self.ti.dag_run.run_id = args.execution_date_or_run_id
         self.ti.dag_run.execution_date = pendulum.instance(timezone.utcnow())
@@ -57,16 +45,9 @@ class InvokeWorker(remote_xcom_pb2_grpc.TaskRunServicer):
         self.ti.map_index = args.map_index
         log.info(f"parsed_args: {args}, dag: {self.dag}, task: {self.task}")
         task_command.task_run(args, dag = self.dag, task=self.task, ti = self.ti)       
-        
-        # find a way not to deserialize and serialize again just to put data inside a list
-        try:
-            with open(airflow_output_path, 'rb') as f:
-                xcoms = [pickle.load(f)]
-        except FileNotFoundError:
-            xcoms = []
-        response = pickle.dumps({"xcoms": xcoms})
-        log.info(f"response: {xcoms}")
-        return remote_xcom_pb2.task_reply(xcoms = response)
+        end_time = perf_counter()
+        response = pickle.dumps({"execution_time": end_time-start_time})
+        return remote_xcom_pb2.task_reply(timing = response)
 
 
 def serve(port: int):

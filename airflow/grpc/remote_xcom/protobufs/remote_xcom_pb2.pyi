@@ -6,17 +6,13 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Optional as _Op
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class task_invoke(_message.Message):
-    __slots__ = ["args", "annotations", "xcoms"]
+    __slots__ = ["args"]
     ARGS_FIELD_NUMBER: _ClassVar[int]
-    ANNOTATIONS_FIELD_NUMBER: _ClassVar[int]
-    XCOMS_FIELD_NUMBER: _ClassVar[int]
     args: _containers.RepeatedScalarFieldContainer[str]
-    annotations: bytes
-    xcoms: bytes
-    def __init__(self, args: _Optional[_Iterable[str]] = ..., annotations: _Optional[bytes] = ..., xcoms: _Optional[bytes] = ...) -> None: ...
+    def __init__(self, args: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class task_reply(_message.Message):
-    __slots__ = ["xcoms"]
-    XCOMS_FIELD_NUMBER: _ClassVar[int]
-    xcoms: bytes
-    def __init__(self, xcoms: _Optional[bytes] = ...) -> None: ...
+    __slots__ = ["timing"]
+    TIMING_FIELD_NUMBER: _ClassVar[int]
+    timing: bytes
+    def __init__(self, timing: _Optional[bytes] = ...) -> None: ...
