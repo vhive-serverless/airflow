@@ -19,7 +19,6 @@ kubectl -n airflow apply -f configs/volumes.yaml
 
 # deploy airflow
 helm upgrade -f configs/values.yaml airflow ./chart --install --namespace airflow
-while [[ ! $(kubectl -n airflow get pods | grep scheduler.*Running) ]]; do sleep 1; done
 
 # provide scheduler access to kubernetes admin interface, this is required to discover knative services
 scheduler="$(kubectl -n airflow get pods | grep scheduler | awk '{print $1}')"
@@ -27,7 +26,7 @@ kubectl -n airflow exec $scheduler -- mkdir /home/airflow/.kube
 kubectl -n airflow cp ~/.kube/config "$scheduler":/home/airflow/.kube/config
 
 # deploy an example workflow
-./scripts/deploy_workflow.sh xcom_dag
+./scripts/deploy_workflow.sh benchmark_w8_d3
 
 # wait for webserver
 while [[ ! $(kubectl -n airflow get pods | grep webserver.*1/1.*Running) ]]; do sleep 1; done

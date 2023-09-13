@@ -28,23 +28,16 @@ class InvokeWorker(remote_xcom_pb2_grpc.TaskRunServicer):
         task_id = os.getenv("AIRFLOW_TASK_ID")
         self.dag = get_dag(f"DAGS_FOLDER/{dag_id}.py", dag_id)
         self.task = self.dag.get_task(task_id=task_id)
-        self.ti, _ = task_command._get_ti_without_db(self.task, -1, create_if_necessary="memory")
-        self.ti.init_run_context(raw=False)
         log.info(f"init_finish")
         
     def HandleTask(self, request, context):
         log.info(f"Received job !")
         args = request.args
-        # Command below can be safely removed; deserialized for logging purpose
         log.info(f"args: {args}")
         start_time = perf_counter()
         args = self.parser.parse_args(args[1:])
-        self.ti.dag_run.run_id = args.execution_date_or_run_id
-        self.ti.dag_run.execution_date = pendulum.instance(timezone.utcnow())
-        self.ti.run_id = args.execution_date_or_run_id
-        self.ti.map_index = args.map_index
         log.info(f"parsed_args: {args}, dag: {self.dag}, task: {self.task}")
-        task_command.task_run(args, dag = self.dag, task=self.task, ti = self.ti)       
+        task_command.task_run(args, dag = self.dag, task=self.task)       
         end_time = perf_counter()
         response = pickle.dumps({"execution_time": end_time-start_time})
         return remote_xcom_pb2.task_reply(timing = response)

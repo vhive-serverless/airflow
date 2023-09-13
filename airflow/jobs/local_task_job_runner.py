@@ -141,11 +141,6 @@ class LocalTaskJobRunner(BaseJobRunner["Job | JobPydantic"], LoggingMixin):
             # signal.signal(signal.SIGUSR2, sigusr2_debug_handler)
             pass
 
-        self.log.info(f"refresh dagrun from db")
-        self.task_instance.dag_run.start_date = self.job.start_date
-        self.task_instance.dag_run.refresh_from_db()
-        self.task_instance.refresh_from_db()
-        self.log.info(f"check and change state before exection")
         if not self.task_instance.check_and_change_state_before_execution(
             mark_success=self.mark_success,
             ignore_all_deps=self.ignore_all_deps,
