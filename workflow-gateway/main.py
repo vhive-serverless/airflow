@@ -87,15 +87,15 @@ def main():
     username='admin',
     password='admin', 
     )
-    dag_id = "benchmark_w8_d3"
+    dag_id = "xcom_dag"
     api_client = airflow_client.client.ApiClient(configuration)
     start_trigger = perf_counter()
     response = trigger_dag(api_client, dag_id)
     finish_trigger = perf_counter()
     
     run_id = response['dag_run_id']
-    prod_id = 'extract'
-    cons_id = 'do_sum'
+    prod_id = 'get_date'
+    cons_id = 'save_date'
     
     got_result_time = get_xcom_values(api_client, dag_id, run_id, [prod_id, cons_id])
     
