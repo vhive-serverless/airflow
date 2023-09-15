@@ -87,20 +87,20 @@ def main():
     username='admin',
     password='admin', 
     )
-    dag_id = "xcom_dag"
+    dag_id = "compute_avg_distributed"
     api_client = airflow_client.client.ApiClient(configuration)
     start_trigger = perf_counter()
     response = trigger_dag(api_client, dag_id)
     finish_trigger = perf_counter()
     
     run_id = response['dag_run_id']
-    prod_id = 'get_date'
-    cons_id = 'save_date'
+    prod_id = 'extract'
+    cons_id = 'do_avg'
     
     got_result_time = get_xcom_values(api_client, dag_id, run_id, [prod_id, cons_id])
     
     print(f"trigger_time: {finish_trigger - start_trigger}")
-    print(f"exec_and_retrieve: {got_result_time - finish_trigger}")
+    print(f"execution_and_retrieve_time: {got_result_time - finish_trigger}")
 
     
 if __name__ == "__main__":

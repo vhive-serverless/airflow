@@ -11,7 +11,6 @@ sudo rm -rf /mnt/data*/*
 
 # update knative yamls, rebuild worker image and deploy airflow using helm
 ./scripts/build_knative_yamls.sh
-./scripts/update_images.sh
 ./scripts/setup_airflow.sh
 
 ./scripts/deploy_workflow.sh compute_avg_distributed
