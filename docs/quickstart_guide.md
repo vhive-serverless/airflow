@@ -1,16 +1,30 @@
 ## Quick start guide
-First, set up a **single node** with `stock-only` configuration
-as described in
-[vHive Quickstart](https://github.com/vhive-serverless/vHive/blob/main/docs/quickstart_guide.md).
-Do not start vHive, as it is not needed.
-The relevant commands for a single-node cluster are reproduced here.
+
+### Infrastructure Setup
+First, we will set up a **single node** with vHive `stock-only` configuration.
+
+To set up hardware infrastructure, refer to `CloudLab Deployment Notes` in
+[vHive Quickstart](https://github.com/vhive-serverless/vHive/blob/main/docs/quickstart_guide.md#3-cloudlab-deployment-notes). You only need to rent 1-node.
+
+To set up software infrastructure, clone this Airflow repository and run commands below. 
+
+[setup_infrastructure.sh](../scripts/setup_infrastructure.sh) will setup Knative using vHive framework. For those who already have a working cluster can skip this script.
 
 ```bash
 git clone --branch knative-worker https://github.com/vhive-serverless/airflow.git
 ./airflow/scripts/setup_infrastructure.sh
 ```
 
-When [setup_infrastructure.sh](../scripts/setup_infrastructure.sh) is finished, run script below.
+[setup_tools.sh](../scripts/setup_tools.sh) will install packages needed.
+These aditional packages include: Docker, Airflow Python Client, gRPC Tools, and K9S
+
+```bash
+./airflow/scripts/setup_tools.sh
+```
+
+### Example Deployment
+
+When `setup_infrastructure.sh` is finished, run script below.
 
 ```bash
 cd airflow
