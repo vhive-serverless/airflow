@@ -35,21 +35,21 @@ from contextlib import suppress
 def get_dag_list(api_client):
     errors = False
 
-    print('[blue]Getting DAG list')
+    print('Getting DAG list')
     dag_api_instance = dag_api.DAGApi(api_client)
     try:
         api_response = dag_api_instance.get_dags()
         print(api_response)
     except airflow_client.client.OpenApiException as e:
-        print("[red]Exception when calling DagAPI->get_dags: %s\n" % e)
+        print("Exception when calling DagAPI->get_dags: %s\n" % e)
         errors = True
     else:
-        print('[green]Getting DAG list successful')
+        print('Getting DAG list successful')
 
 
 def trigger_dag(api_client, DAG_ID):
 
-    print('[blue]Triggering a DAG run')
+    print('Triggering a DAG run: ')
     dag_run_api_instance = dag_run_api.DAGRunApi(api_client)
     try:
         # Create a DAGRun object (no dag_id should be specified because it is read-only property of DAGRun)
@@ -61,7 +61,7 @@ def trigger_dag(api_client, DAG_ID):
         print(api_response)
         return api_response
     except airflow_client.client.exceptions.OpenApiException as e:
-        print("[red]Exception when calling DAGRunAPI->post_dag_run: %s\n" % e)
+        print("Exception when calling DAGRunAPI->post_dag_run: %s\n" % e)
         errors = True
 
 def get_xcom_values(api_client, dag_id, run_id, task_id):
@@ -76,6 +76,7 @@ def get_xcom_values(api_client, dag_id, run_id, task_id):
             sleep(0.1)
         else: 
             got_result_time = perf_counter()
+            print(f"\n\nExecution Result: ")
             print(f"producer: {xcom_return_value_producer}")
             print(f"consumer: {xcom_return_value_consumer}")
             
@@ -99,6 +100,7 @@ def main():
     
     got_result_time = get_xcom_values(api_client, dag_id, run_id, [prod_id, cons_id])
     
+    print(f"\nEnd-to-end Latency:")
     print(f"trigger_time: {finish_trigger - start_trigger}")
     print(f"execution_and_retrieve_time: {got_result_time - finish_trigger}")
 

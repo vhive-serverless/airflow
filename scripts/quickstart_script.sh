@@ -19,9 +19,12 @@ sudo rm -rf /mnt/data*/*
 log_dir=./benchmark/"$(date +%s)"
 mkdir -p "$log_dir"
 kubectl port-forward svc/airflow-webserver 8080:8080 --namespace airflow 2>&1 >/dev/null &
+echo "waiting 60 sec until workers to scale down to zero"
+sleep 65
+echo -e "\n ----- Cold Start Invocation -----\n"
+python ./workflow-gateway/main.py
 sleep 3
-python ./workflow-gateway/main.py 2>&1 >/dev/null
-sleep 3
+echo -e "\n----- Warm Start Invocation -----\n"
 python ./workflow-gateway/main.py
 sleep 3
 scheduler="$(kubectl -n airflow get pods | grep scheduler | awk '{print $1}')"
