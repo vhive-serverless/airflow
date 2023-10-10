@@ -34,63 +34,54 @@ cd airflow
 [quickstart_script.sh](../scripts/quickstart_script.sh) deploys airflow using helm chart, and run a sample dag [avg_distributed.py](../workflows/image/airflow-dags/avg_distributed.py) twice to show cold start and warm start latency difference. The dag run trigger will return this result:
 
 ```bash
-{'conf': {},
- 'dag_id': 'compute_avg_distributed',
- 'dag_run_id': 'manual_d686492b6be24f7e8974e79ca5d2e085',
- 'data_interval_end': datetime.datetime(2023, 10, 9, 7, 40, 21, 781845, tzinfo=tzutc()),
- 'data_interval_start': datetime.datetime(2023, 10, 9, 7, 40, 21, 781845, tzinfo=tzutc()),
- 'end_date': None,
- 'execution_date': datetime.datetime(2023, 10, 9, 7, 40, 21, 781845, tzinfo=tzutc()),
- 'external_trigger': True,
- 'last_scheduling_decision': None,
- 'logical_date': datetime.datetime(2023, 10, 9, 7, 40, 21, 781845, tzinfo=tzutc()),
- 'note': None,
- 'run_type': 'manual',
- 'start_date': None,
- 'state': 'queued'}
+Triggering a DAG run:
+dag_id: compute_avg_distributed
+dag_run_id: manual_1cfa7678ab1b461b8326015b232667d9
 ```
 
 And after a few seconds, result will be pulled from Database. 
 ```bash
-producer: {'dag_id': 'compute_avg_distributed',
- 'execution_date': '2023-10-09T07:40:21.781845+00:00',
- 'key': 'return_value',
- 'map_index': -1,
- 'task_id': 'extract',
- 'timestamp': '2023-10-09T07:40:31.530512+00:00',
- 'value': '[1, 2, 3, 4]'}
+Execution Result:
+  extract:
+    dag_id: compute_avg_distributed
+    task_id: extract
+    value: [1, 2, 3, 4]
+  count:
+    dag_id: compute_avg_distributed
+    task_id: compute_count
+    value: 4
+  sum:
+    dag_id: compute_avg_distributed
+    task_id: compute_sum
+    value: 10.0
+  average:
+    dag_id: compute_avg_distributed
+    task_id: do_avg
+    value: 2.5
 
-consumer: {'dag_id': 'compute_avg_distributed',
- 'execution_date': '2023-10-09T07:40:21.781845+00:00',
- 'key': 'return_value',
- 'map_index': -1,
- 'task_id': 'do_avg',
- 'timestamp': '2023-10-09T07:41:07.570061+00:00',
- 'value': '2.5'}
-
-End-to-end Latency:
-trigger_time: 0.43595568499949877
-execution_and_retrieve_time: 46.40222336900024
+End-to-end Latency: 45.3 second
 ```
 
-`trigger_time` and `execution_and_retrieve_time` for each task is measured with Airflow-webserver HTTP response time. 
+End-to-end latency is measured with Airflow-webserver HTTP response time. 
 
 
 ```bash
-[2023-10-09T07:41:07.724+0000] {kubernetes_executor_utils.py:421} INFO - TIMING: {"function": "worker_execution", "times": [3.0325508979994993], "timestamp_annotations": {"dag_id": "compute_avg_distributed", "task_id": "do_avg", "try_number": 1, "run_id": "manual_d686492b6be24f7e8974e79ca5d2e085", "map_index": -1}}
+TIMING: {"function": "worker_execution", "times": [2.935269741999946], ...
+TIMING: {"function": "executor_async_task", "times": [1696967251.981217, 1696967251.981461, 1696967261.053331, 1696967261.054357],
+"timestamp_annotations": ["function_entry", "before_post_request", "after_post_request", "function_exit"], ...
 ```
+
+You can retrieve per-task worker and scheduler execution time by viewing the log of scheduler pod using `k9s`
+Also the quickstart script will automatically dump pods logs in benchmark folder.
+
 ---
 For warm start, same result will be returned with much shorter execution time and latency
 
 ```bash
-End-to-end Latency:
-trigger_time: 0.3572731180001938
-execution_and_retrieve_time: 4.175672332999966
+End-to-end Latency: 4.96 second
 ```
 
 ```bash
-[2023-10-09T07:41:16.004+0000] {kubernetes_executor_utils.py:421} INFO - TIMING: {"function": "worker_execution", "times": [0.5604807079998864], "timestamp_annotations": {"dag_id": "compute_avg_distributed", "task_id": "do_avg", "try_number": 1, "run_id": "manual_054326cf5be74c839670338674d40569", "map_index": -1}}
-```
-
-You can retrieve per-task execution time by viewing the log of scheduler pod using `k9s`
-Also the quickstart script will automatically dump pods logs in benchmark folder.
+TIMING: {"function": "worker_execution", "times": [0.5060419100009312], ...
+TIMING: {"function": "executor_async_task", "times": [1696967299.870403, 1696967299.8705447, 1696967300.411216, 1696967300.412098],
+"timestamp_annotations": ["function_entry", "before_post_request", "after_post_request", "function_exit"], ...

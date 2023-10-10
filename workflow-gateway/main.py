@@ -58,27 +58,32 @@ def trigger_dag(api_client, DAG_ID):
             dag_run_id='manual_' + uuid.uuid4().hex,
         )
         api_response = dag_run_api_instance.post_dag_run(DAG_ID, dag_run)
-        print(api_response)
+        print(f"    dag_id: {api_response['dag_id']}")
+        print(f"dag_run_id: {api_response['dag_run_id']}")
         return api_response
     except airflow_client.client.exceptions.OpenApiException as e:
         print("Exception when calling DAGRunAPI->post_dag_run: %s\n" % e)
         errors = True
 
 def get_xcom_values(api_client, dag_id, run_id, task_id):
-    prod_id, cons_id = task_id
+    extract_id, count_id, sum_id, avg_id = task_id
     api_instance = x_com_api.XComApi(api_client)
     while True:
         try: 
-            xcom_return_value_producer = api_instance.get_xcom_entry(dag_id, run_id, prod_id, 'return_value')
-            xcom_return_value_consumer = api_instance.get_xcom_entry(dag_id, run_id, cons_id, 'return_value')
+            xcom_return_value_extract = api_instance.get_xcom_entry(dag_id, run_id, extract_id, 'return_value')
+            xcom_return_value_count = api_instance.get_xcom_entry(dag_id, run_id, count_id, 'return_value')
+            xcom_return_value_sum = api_instance.get_xcom_entry(dag_id, run_id, sum_id, 'return_value')
+            xcom_return_value_average = api_instance.get_xcom_entry(dag_id, run_id, avg_id, 'return_value')
         except Exception as e:
-            print(f"no result: {e.status}", end="\r")
+            print(f"waiting for result: {e.status}", end="\r")
             sleep(0.1)
         else: 
             got_result_time = perf_counter()
             print(f"\n\nExecution Result: ")
-            print(f"producer: {xcom_return_value_producer}")
-            print(f"consumer: {xcom_return_value_consumer}")
+            print(f"  extract: \n    dag_id: {xcom_return_value_extract['dag_id']}\n    task_id: {xcom_return_value_extract['task_id']}\n    value: {xcom_return_value_extract['value']}")
+            print(f"  count: \n    dag_id: {xcom_return_value_count['dag_id']}\n    task_id: {xcom_return_value_count['task_id']}\n    value: {xcom_return_value_count['value']}")
+            print(f"  sum: \n    dag_id: {xcom_return_value_sum['dag_id']}\n    task_id: {xcom_return_value_sum['task_id']}\n    value: {xcom_return_value_sum['value']}")
+            print(f"  average: \n    dag_id: {xcom_return_value_average['dag_id']}\n    task_id: {xcom_return_value_average['task_id']}\n    value: {xcom_return_value_average['value']}\n")
             
             return got_result_time
 
@@ -95,14 +100,14 @@ def main():
     finish_trigger = perf_counter()
     
     run_id = response['dag_run_id']
-    prod_id = 'extract'
-    cons_id = 'do_avg'
+    extract_id = 'extract'
+    count_id = 'compute_count'
+    sum_id = 'compute_sum'
+    avg_id = 'do_avg'
     
-    got_result_time = get_xcom_values(api_client, dag_id, run_id, [prod_id, cons_id])
+    got_result_time = get_xcom_values(api_client, dag_id, run_id, [extract_id, count_id, sum_id, avg_id])
     
-    print(f"\nEnd-to-end Latency:")
-    print(f"trigger_time: {finish_trigger - start_trigger}")
-    print(f"execution_and_retrieve_time: {got_result_time - finish_trigger}")
+    print(f"End-to-end Latency: {round(got_result_time - finish_trigger,2)} second")
 
     
 if __name__ == "__main__":
